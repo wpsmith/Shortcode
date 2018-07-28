@@ -16,11 +16,11 @@
     }
   ],
   "support": {
-    "issues": "https://github.com/wpsmith/Shortcodes/issues"
+    "issues": "https://github.com/wpsmith/Shortcode/issues"
   },
   "require": {
     "php": ">=5.2.4",
-    "wpsmith/singleton": "0.0.1"
+    "wpsmith/singleton": "^0.0.1"
   },
   "autoload": {
     "psr-4": {
