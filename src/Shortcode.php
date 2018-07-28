@@ -50,7 +50,7 @@ if ( ! class_exists( 'WPS\Shortcodes\Shortcode' ) ) {
 		 *
 		 * @var bool
 		 */
-		public $is_active = false;
+		protected $is_active = false;
 
 		/**
 		 * Shortcode constructor.
