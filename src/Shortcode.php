@@ -53,6 +53,20 @@ if ( ! class_exists( 'WPS\Shortcodes\Shortcode' ) ) {
 		protected $is_active = false;
 
 		/**
+		 * The current shortcode attributes.
+		 *
+		 * @var array
+		 */
+		protected $atts = array();
+
+		/**
+		 * The current shortcode content.
+		 *
+		 * @var array
+		 */
+		protected $content = '';
+
+		/**
 		 * Shortcode constructor.
 		 */
 		protected function __construct() {
