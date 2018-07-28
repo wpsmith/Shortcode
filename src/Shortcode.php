@@ -137,7 +137,8 @@ if ( ! class_exists( 'WPS\Shortcodes\Shortcode' ) ) {
 		 * @return array Array of parsed shortcode attributes.
 		 */
 		protected function get_atts( $atts ) {
-			return shortcode_atts( $this->get_defaults(), $atts );
+			$this->atts = shortcode_atts( $this->get_defaults(), $atts );
+			return $this->atts;
 		}
 
 		/**
