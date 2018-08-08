@@ -71,6 +71,19 @@ if ( ! class_exists( 'WPS\Shortcodes\Shortcode' ) ) {
 		 */
 		protected function __construct() {
 			add_action( 'plugins_loaded', array( $this, 'add_shortcode' ) );
+
+
+			if ( method_exists( $this, 'init' ) ) {
+				add_action( 'init', array( $this, 'init' ) );
+			}
+
+			if ( method_exists( $this, 'register_scripts' ) ) {
+				add_action( 'init', array( $this, 'register_scripts' ) );
+			}
+
+			if ( method_exists( $this, 'wp_enqueue_scripts' ) ) {
+				add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_scripts' ) );
+			}
 		}
 
 		public function add_shortcode() {
