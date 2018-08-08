@@ -233,7 +233,7 @@ if ( ! class_exists( 'WPS\Shortcodes\Shortcode' ) ) {
 
 			$post = get_post( $post_id );
 
-			return ( has_shortcode( $post->post_content, $this->name ) );
+			return apply_filters( "wps_fundraising_shortcode_{$this->name}_is_active", ( has_shortcode( $post->post_content, $this->name ) ) );
 		}
 	}
 }
