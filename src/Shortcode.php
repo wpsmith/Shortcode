@@ -84,6 +84,10 @@ if ( ! class_exists( 'WPS\Shortcodes\Shortcode' ) ) {
 			if ( method_exists( $this, 'enqueue_scripts' ) ) {
 				add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 			}
+
+			if ( method_exists( $this, 'maybe_enqueue_scripts' ) ) {
+				add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+			}
 		}
 
 		public function add_shortcode() {
