@@ -81,8 +81,8 @@ if ( ! class_exists( 'WPS\Shortcodes\Shortcode' ) ) {
 				add_action( 'init', array( $this, 'register_scripts' ) );
 			}
 
-			if ( method_exists( $this, 'wp_enqueue_scripts' ) ) {
-				add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_scripts' ) );
+			if ( method_exists( $this, 'enqueue_scripts' ) ) {
+				add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 			}
 		}
 
