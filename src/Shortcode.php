@@ -81,13 +81,22 @@ if ( ! class_exists( 'WPS\Shortcodes\Shortcode' ) ) {
 				add_action( 'init', array( $this, 'register_scripts' ) );
 			}
 
-			if ( method_exists( $this, 'enqueue_scripts' ) ) {
-				add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+			add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+		}
+
+
+
+		/**
+		 * Enqueues the script.
+		 *
+		 * @param int $post_id Post ID.
+		 */
+		public function maybe_enqueue_scripts() {
+
+			if ( $this->is_active() && method_exists( $this, 'enqueue_scripts' ) ) {
+				$this->enqueue_scripts();
 			}
 
-			if ( method_exists( $this, 'maybe_enqueue_scripts' ) ) {
-				add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
-			}
 		}
 
 		public function add_shortcode() {
