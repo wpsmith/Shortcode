@@ -81,7 +81,7 @@ if ( ! class_exists( 'WPS\Shortcodes\Shortcode' ) ) {
 				add_action( 'init', array( $this, 'register_scripts' ) );
 			}
 
-			add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+			add_action( 'wp_enqueue_scripts', array( $this, 'maybe_enqueue_scripts' ) );
 		}
 
 
@@ -93,7 +93,7 @@ if ( ! class_exists( 'WPS\Shortcodes\Shortcode' ) ) {
 		 */
 		public function maybe_enqueue_scripts() {
 
-			if ( $this->is_active() && method_exists( $this, 'enqueue_scripts' ) ) {
+			if ( method_exists( $this, 'enqueue_scripts' ) && $this->is_active() ) {
 				$this->enqueue_scripts();
 			}
 
