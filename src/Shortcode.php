@@ -8,7 +8,7 @@
  * Any modifications to or software including (via compiler) GPL-licensed code must also be made
  * available under the GPL along with build & install instructions.
  *
- * @package    WPS\Shortcodes
+ * @package    WPS\WP\Shortcodes
  * @author     Travis Smith <t@wpsmith.net>
  * @copyright  2015-2018 Travis Smith
  * @license    http://opensource.org/licenses/gpl-2.0.php GNU Public License v2
@@ -17,9 +17,9 @@
  * @since      0.1.0
  */
 
-namespace WPS\Shortcodes;
+namespace WPS\WP\Shortcodes;
 
-use WPS\Core;
+use WPS\Core\Singleton;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -27,16 +27,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 
-if ( ! class_exists( 'WPS\Shortcodes\Shortcode' ) ) {
+if ( ! class_exists( 'WPS\WP\Shortcodes\Shortcode' ) ) {
 	/**
 	 * Shortcode Abstract Class
 	 *
 	 * Assists in creating Shortcodes.
 	 *
-	 * @package WPS\Core
+	 * @package WPS\WP
 	 * @author  Travis Smith <t@wpsmith.net>
 	 */
-	abstract class Shortcode extends Core\Singleton {
+	abstract class Shortcode extends Singleton {
 
 		/**
 		 * Shortcode name.
@@ -70,21 +70,41 @@ if ( ! class_exists( 'WPS\Shortcodes\Shortcode' ) ) {
 		 * Shortcode constructor.
 		 */
 		protected function __construct() {
-			add_action( 'plugins_loaded', array( $this, 'add_shortcode' ) );
-
+			$this->maybe_do_action( 'plugins_loaded', array( $this, 'add_shortcode' ) );
 
 			if ( method_exists( $this, 'init' ) ) {
-				add_action( 'init', array( $this, 'init' ) );
+				$this->maybe_do_action( 'init', array( $this, 'init' ) );
 			}
 
 			if ( method_exists( $this, 'register_scripts' ) ) {
-				add_action( 'init', array( $this, 'register_scripts' ) );
+				$this->maybe_do_action( 'init', array( $this, 'register_scripts' ) );
 			}
 
-			add_action( 'wp_enqueue_scripts', array( $this, 'maybe_enqueue_scripts' ) );
+			$this->maybe_do_action( 'wp_enqueue_scripts', array( $this, 'maybe_enqueue_scripts' ) );
 		}
 
+		/**
+		 * Hooks action or executes action.
+		 *
+		 * @since  1.0.0
+		 * @author Travis Smith <t@wpsmith.net>
+		 *
+		 * @param string       WordPress action to be checked with did_action().
+		 * @param string|array Function name/array to be called.
+		 *
+		 * @return void.
+		 */
+		private function maybe_do_action( $hook, $action ) {
+			if ( ! is_callable( $action ) ) {
+				return;
+			}
 
+			if ( ! did_action( $hook ) ) {
+				add_action( $hook, $action );
+			} else {
+				call_user_func( $action );
+			}
+		}
 
 		/**
 		 * Enqueues the script.
@@ -99,6 +119,9 @@ if ( ! class_exists( 'WPS\Shortcodes\Shortcode' ) ) {
 
 		}
 
+		/**
+		 * Adds the shortcode.
+		 */
 		public function add_shortcode() {
 
 			if ( shortcode_exists( $this->name ) ) {
@@ -128,6 +151,11 @@ if ( ! class_exists( 'WPS\Shortcodes\Shortcode' ) ) {
 
 		}
 
+		/**
+		 * Gets the hooks that a shortcode may be foudn.
+		 *
+		 * @return array
+		 */
 		protected function get_hooks_to_do_shortcode() {
 			return array(
 				'the_title',
@@ -139,6 +167,13 @@ if ( ! class_exists( 'WPS\Shortcodes\Shortcode' ) ) {
 			);
 		}
 
+		/**
+		 * Searches specified content contains the shortcode & sets is_active prop.
+		 *
+		 * @param string $content The content.
+		 *
+		 * @return string
+		 */
 		public function has_shortcode( $content ) {
 			// Don't do anything if we already know it's active on the page.
 			if ( true === $this->is_active ) {
@@ -245,8 +280,11 @@ if ( ! class_exists( 'WPS\Shortcodes\Shortcode' ) ) {
 			}
 
 			$post = get_post( $post_id );
+			if ( is_a( $post, 'WP_Post') ) {
+				return apply_filters( "wps_fundraising_shortcode_{$this->name}_is_active", ( has_shortcode( $post->post_content, $this->name ) ) );
+			}
 
-			return apply_filters( "wps_fundraising_shortcode_{$this->name}_is_active", ( has_shortcode( $post->post_content, $this->name ) ) );
+			return apply_filters( "wps_fundraising_shortcode_{$this->name}_is_active", false );
 		}
 	}
 }
