@@ -196,8 +196,24 @@ if ( ! class_exists( __NAMESPACE__ . '\Shortcode' ) ) {
 		 * @param array $atts Array of user shortcode attributes.
 		 *
 		 * @return array Array of parsed shortcode attributes.
+		 * @deprecated 1.1.0 Deprecated in favor of $this->shortcode_atts().
 		 */
 		protected function get_atts( $atts ) {
+			_deprecated_function( __METHOD__, '1.1.0', 'shortcode_atts' );
+			$this->shortcode_atts( $atts );
+
+			return $this->atts;
+
+		}
+
+		/**
+		 * Gets shortcode attributes.
+		 *
+		 * @param array $atts Array of user shortcode attributes.
+		 *
+		 * @return array Array of parsed shortcode attributes.
+		 */
+		protected function shortcode_atts( $atts ) {
 			$this->atts = shortcode_atts( $this->get_defaults(), $atts );
 
 			if ( method_exists( $this, 'sanitize_atts' ) ) {
