@@ -199,6 +199,11 @@ if ( ! class_exists( __NAMESPACE__ . '\Shortcode' ) ) {
 		 */
 		protected function get_atts( $atts ) {
 			$this->atts = shortcode_atts( $this->get_defaults(), $atts );
+
+			if ( method_exists( $this, 'sanitize_atts' ) ) {
+				return $this->sanitize_atts( $this->atts );
+			}
+
 			return $this->atts;
 		}
 
