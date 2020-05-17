@@ -67,32 +67,44 @@ if ( ! class_exists( __NAMESPACE__ . '\Shortcode' ) ) {
 		protected $content = '';
 
 		/**
+		 * Whether the scripts have been enqueued.
+		 *
+		 * @var bool
+		 */
+		protected $enqueued = false;
+
+		/**
 		 * Shortcode constructor.
+		 *
 		 */
 		protected function __construct() {
+			// Register the shortcode.
 			$this->maybe_do_action( 'plugins_loaded', array( $this, 'add_shortcode' ) );
 
+			// Do something on init, maybe.
 			if ( method_exists( $this, 'init' ) ) {
 				$this->maybe_do_action( 'init', array( $this, 'init' ) );
 			}
 
+			// Register some scripts/styles, maybe.
 			if ( method_exists( $this, 'register_scripts' ) ) {
 				$this->maybe_do_action( 'init', array( $this, 'register_scripts' ) );
 			}
 
+			// Output scripts/styles, maybe.
 			$this->maybe_do_action( 'wp_enqueue_scripts', array( $this, 'maybe_enqueue_scripts' ) );
 		}
 
 		/**
 		 * Hooks action or executes action.
 		 *
-		 * @since  1.0.0
-		 * @author Travis Smith <t@wpsmith.net>
-		 *
 		 * @param string       WordPress action to be checked with did_action().
 		 * @param string|array Function name/array to be called.
 		 *
 		 * @return void.
+		 * @author Travis Smith <t@wpsmith.net>
+		 *
+		 * @since  1.0.0
 		 */
 		private function maybe_do_action( $hook, $action ) {
 			if ( ! is_callable( $action ) ) {
@@ -108,12 +120,11 @@ if ( ! class_exists( __NAMESPACE__ . '\Shortcode' ) ) {
 
 		/**
 		 * Enqueues the script.
-		 *
-		 * @param int $post_id Post ID.
 		 */
 		public function maybe_enqueue_scripts() {
 
 			if ( method_exists( $this, 'enqueue_scripts' ) && $this->is_active() ) {
+				$this->enqueued = true;
 				$this->enqueue_scripts();
 			}
 
@@ -128,26 +139,28 @@ if ( ! class_exists( __NAMESPACE__ . '\Shortcode' ) ) {
 				remove_shortcode( $this->name );
 			}
 
-			add_shortcode( $this->name, array( $this, 'shortcode' ) );
+			add_shortcode( $this->name, array( $this, 'do_shortcode' ) );
 
-			// Check the Title
-			add_filter( 'the_title', array( $this, 'has_shortcode' ), 9 );
+			if ( ! $this->is_active ) {
+				// Check the Title
+				add_filter( 'the_title', array( $this, 'has_shortcode' ), 9 );
 
-			// Check the Content
-			add_filter( 'the_content', array( $this, 'has_shortcode' ) );
+				// Check the Content
+				add_filter( 'the_content', array( $this, 'has_shortcode' ) );
 
-			// Check the Excerpt
-			add_filter( 'the_excerpt', array( $this, 'has_shortcode' ), 9 );
+				// Check the Excerpt
+				add_filter( 'the_excerpt', array( $this, 'has_shortcode' ), 9 );
 
-			// Check the widgets stuffs
-			add_filter( 'widget_title', array( $this, 'has_shortcode' ), 9 );
-			add_filter( 'widget_custom_html_content', array( $this, 'has_shortcode' ), 9 );
-			add_filter( 'widget_text', array( $this, 'has_shortcode' ), 9 );
-			add_filter( 'widget_text_content', array( $this, 'has_shortcode' ), 9 );
+				// Check the widgets stuffs
+				add_filter( 'widget_title', array( $this, 'has_shortcode' ), 9 );
+				add_filter( 'widget_custom_html_content', array( $this, 'has_shortcode' ), 9 );
+				add_filter( 'widget_text', array( $this, 'has_shortcode' ), 9 );
+				add_filter( 'widget_text_content', array( $this, 'has_shortcode' ), 9 );
 
-			// Check the nav
-			add_filter( 'nav_menu_link_attributes', array( $this, 'nav_menu_link_attributes' ) );
-			add_filter( 'nav_menu_item_title', array( $this, 'nav_menu_item_title' ), 99 );
+				// Check the nav
+				add_filter( 'nav_menu_link_attributes', array( $this, 'nav_menu_link_attributes' ) );
+				add_filter( 'nav_menu_item_title', array( $this, 'nav_menu_item_title' ), 99 );
+			}
 
 		}
 
@@ -188,6 +201,26 @@ if ( ! class_exists( __NAMESPACE__ . '\Shortcode' ) ) {
 			}
 
 			return $content;
+		}
+
+		/**
+		 * Whether the shortcode exists in the post content.
+		 *
+		 * @param null $post_id|\WP_Post Post ID. Defaults to get_the_ID().
+		 *
+		 * @return bool Whether the content contains the shortcode.
+		 */
+		public function is_active( $post_id = null ) {
+			if ( ! $post_id ) {
+				$post_id = get_the_ID();
+			}
+
+			$post = get_post( $post_id );
+			if ( is_a( $post, 'WP_Post' ) ) {
+				return apply_filters( "wps_shortcode_{$this->name}_is_active", ( has_shortcode( $post->post_content, $this->name ) ) );
+			}
+
+			return apply_filters( "wps_shortcode_{$this->name}_is_active", false );
 		}
 
 		/**
@@ -247,10 +280,10 @@ if ( ! class_exists( __NAMESPACE__ . '\Shortcode' ) ) {
 		 * @param array $atts {
 		 *     The HTML attributes applied to the menu item's `<a>` element, empty strings are ignored.
 		 *
-		 *     @type string $title  Title attribute.
-		 *     @type string $target Target attribute.
-		 *     @type string $rel    The rel attribute.
-		 *     @type string $href   The href attribute.
+		 * @type string $title Title attribute.
+		 * @type string $target Target attribute.
+		 * @type string $rel The rel attribute.
+		 * @type string $href The href attribute.
 		 * }
 		 *
 		 * @return mixed Array of HTML attributes.
@@ -279,33 +312,43 @@ if ( ! class_exists( __NAMESPACE__ . '\Shortcode' ) ) {
 		}
 
 		/**
+		 * Helper to perform the shortcode.
+		 *
+		 * Do not extend this shortcode.
+		 * This is a helper method to merge the attributes and enqueue scripts if needed.
+		 *
+		 * @access private
+		 *
+		 * @param array  $atts Array of user attributes.
+		 * @param string $content Content of the shortcode.
+		 *
+		 * @return string Parsed output of the shortcode.
+		 */
+		public function do_shortcode( $atts, $content = null ) {
+			// Merge the defaults, etc.
+			$this->shortcode_atts( $atts );
+
+			// Set shortcode to active.
+			add_filter( "wps_shortcode_{$this->name}_is_active", '__return_true' );
+
+			// Enqueue scripts if they exist and haven't been already.
+			$this->maybe_enqueue_scripts();
+
+			// Do the shortcode.
+			return $this->shortcode( $atts, $content );
+		}
+
+		/**
 		 * Performs the shortcode.
 		 *
-		 * @param array  $atts    Array of user attributes.
+		 * There is no reason to perform `shortcode_atts` or `wp_parse_args` or to enqueue your script
+		 * as all these have already been done for you.
+		 *
+		 * @param array  $atts Array of user attributes.
 		 * @param string $content Content of the shortcode.
 		 *
 		 * @return string Parsed output of the shortcode.
 		 */
 		abstract public function shortcode( $atts, $content = null );
-
-		/**
-		 * Whether the shortcode exists in the post content.
-		 *
-		 * @param null $post_id Post ID. Defaults to get_the_ID().
-		 *
-		 * @return bool Whether the content contains the shortcode.
-		 */
-		public function is_active( $post_id = null ) {
-			if ( ! $post_id ) {
-				$post_id = get_the_ID();
-			}
-
-			$post = get_post( $post_id );
-			if ( is_a( $post, 'WP_Post') ) {
-				return apply_filters( "wps_fundraising_shortcode_{$this->name}_is_active", ( has_shortcode( $post->post_content, $this->name ) ) );
-			}
-
-			return apply_filters( "wps_fundraising_shortcode_{$this->name}_is_active", false );
-		}
 	}
 }
